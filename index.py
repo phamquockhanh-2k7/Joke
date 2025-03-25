@@ -12,19 +12,28 @@ bot = telegram.Bot(token=BOT_TOKEN)
 def home():
     return "Bot is running!"
 
-# Endpoint webhook: Telegram sẽ gửi POST request vào đây
 @app.route(f"/{BOT_TOKEN}", methods=["POST"])
 def webhook():
-    update = Update.de_json(request.get_json(force=True), bot)
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(handle_update(update))
-    return "OK"
+    try:
+        data = request.get_json(force=True)
+        update = Update.de_json(data, bot)
+        # Tạo event loop mới cho mỗi request
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(handle_update(update))
+        return "OK", 200
+    except Exception as e:
+        print("Error in webhook:", e)
+        return str(e), 500
 
-# Xử lý tin nhắn được gửi đến
 async def handle_update(update: Update):
-    if update.message and update.message.text.strip() == "/start":
-        await update.message.reply_text("Xin chào!")
+    if update.message and update.message.text:
+        if update.message.text.strip() == "/start":
+            await update.message.reply_text("Xin chàoooooo!")
+        else:
+            print("Received message:", update.message.text)
+    else:
+        print("No valid message in update.")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
